@@ -119,7 +119,15 @@ CREATE DATABASE InventoryDB;
 USE InventoryDB;
 ```
 
-Then create all tables, views, and triggers as per the schema.
+Import the provided database schema:
+
+Open MySQL Workbench
+Go to Server → Data Import
+Select:
+
+database/InventoryDB.sql
+
+Run import
 
 ### 4. Create your db.py file
 
