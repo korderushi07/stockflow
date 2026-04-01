@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Sales</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="/static/css/style.css" rel="stylesheet"/>
+</head>
+<body>
+
+  <nav class="navbar navbar-light bg-white px-4 py-3 shadow-sm border-bottom">
+    <span class="navbar-brand fw-bold fs-5 text-dark"><i class="bi bi-box-seam me-2 text-primary"></i>InventoryPro</span>
+    <div class="d-flex gap-3">
+      <a href="/" class="nav-link text-secondary">Dashboard</a>
+      <a href="/products" class="nav-link text-secondary">Products</a>
+      <a href="/sales" class="nav-link text-dark fw-semibold">Sales</a>
+      <a href="/alerts" class="nav-link text-secondary">Alerts</a>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4 py-4">
+    <h4 class="fw-bold mb-1">Sales</h4>
+    <p class="text-muted mb-4">Record a new sale — stock reduces automatically via SQL trigger</p>
+
+    <!-- NEW SALE FORM -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3"><span class="fw-semibold">Record New Sale</span></div>
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label">Product</label>
+            <select id="s-product" class="form-select"><option>Loading...</option></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Customer</label>
+            <select id="s-customer" class="form-select"><option>Loading...</option></select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Quantity</label>
+            <input type="number" id="s-qty" class="form-control" placeholder="1" min="1"/>
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-success w-100" onclick="addSale()">
+              <i class="bi bi-cart-plus me-1"></i> Record Sale
+            </button>
+          </div>
+          <div class="col-12">
+            <div id="sale-msg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIGGER INFO BOX -->
+    <div class="alert alert-info border-0 d-flex gap-2 align-items-start mb-4">
+      <i class="bi bi-lightning-charge-fill text-info mt-1"></i>
+      <div>
+        <strong>SQL Trigger Active:</strong> When you record a sale, the MySQL trigger
+        <code>trg_reduce_stock</code> automatically reduces the product's stock quantity
+        and logs it in <code>stock_transactions</code>. No extra code needed!
+      </div>
+    </div>
+
+    <!-- SALES TABLE -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3"><span class="fw-semibold">All Sales</span></div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th><th>Product</th><th>Customer</th>
+                <th>Qty Sold</th><th>Total Amount</th><th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="sales-body">
+              <tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadDropdowns() {
+      const [prods, custs] = await Promise.all([
+        fetch("/api/products").then(r => r.json()),
+        fetch("/api/customers").then(r => r.json())
+      ]);
+      document.getElementById("s-product").innerHTML =
+        prods.map(p => `<option value="${p.product_id}">${p.product} (Stock: ${p.stock_qty})</option>`).join("");
+      document.getElementById("s-customer").innerHTML =
+        custs.map(c => `<option value="${c.customer_id}">${c.full_name}</option>`).join("");
+    }
+
+    async function loadSales() {
+      const res = await fetch("/api/sales");
+      const data = await res.json();
+      document.getElementById("sales-body").innerHTML = data.map(s => `
+        <tr>
+          <td>#${s.sale_id}</td>
+          <td class="fw-semibold">${s.product}</td>
+          <td>${s.customer}</td>
+          <td>${s.quantity_sold}</td>
+          <td>₹${s.total_amount}</td>
+          <td>${s.sale_date}</td>
+        </tr>`).join("");
+    }
+
+    async function addSale() {
+      const payload = {
+        product_id:    document.getElementById("s-product").value,
+        customer_id:   document.getElementById("s-customer").value,
+        quantity_sold: document.getElementById("s-qty").value
+      };
+      const res = await fetch("/api/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      const msgDiv = document.getElementById("sale-msg");
+      msgDiv.innerHTML = `<div class="alert alert-success py-2">${data.message}</div>`;
+      loadSales();
+      loadDropdowns();
+      setTimeout(() => msgDiv.innerHTML = "", 4000);
+    }
+
+    loadDropdowns();
+    loadSales();
+  </script>
+</body>
+</html>
