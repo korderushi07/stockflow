@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materio Dashboard - InventoryPro</title>
+    <!-- Tailwind via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        materio: '#FFB547',
+                        background: '#F4F5fa', // Slight gray from image
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Heroicons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F4F5FA; min-height: 100vh; overflow-x: hidden; }
+        .pill-active { background-color: #FDEEDC; color: #D97706; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="max-w-[1440px] px-8 py-8 mx-auto flex flex-col min-h-screen relative">
+        <!-- Top Navbar Area -->
+        <header class="flex items-center justify-between mb-10 w-full sticky top-0 bg-[#F4F5FA] pt-8 pb-4 z-50 -mt-8">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-2.5">
+                <div class="h-8 w-8 relative flex items-center justify-center">
+                    <!-- Geometric Logo shape from image -->
+                    <div class="absolute inset-0 bg-[#FFB547] rounded-tl-lg rounded-bl-lg rounded-br text-transparent" style="transform: skewY(-15deg) scaleY(1.1);"></div>
+                    <div class="absolute right-0 bottom-0 top-0 w-2.5 bg-orange-500 rounded-r shadow-sm"></div>
+                </div>
+                <span class="text-xl font-bold tracking-tight text-gray-900">Materio</span>
+            </div>
+
+            <!-- Central Pill Navigation -->
+            <nav class="hidden md:flex bg-white rounded-full p-1 shadow-sm border border-gray-100 items-center space-x-1 absolute left-1/2 transform -translate-x-1/2">
+                <a href="/" class="pill-active font-semibold px-6 py-2 rounded-full text-sm transition">Dashboard</a>
+                <a href="/products" class="text-gray-500 hover:text-gray-800 px-6 py-2 rounded-full text-sm font-medium transition">Products</a>
+                <a href="/sales" class="text-gray-500 hover:text-gray-800 px-6 py-2 rounded-full text-sm font-medium transition">Sales</a>
+                <a href="/alerts" class="text-gray-500 hover:text-gray-800 px-6 py-2 rounded-full text-sm font-medium transition">Alerts</a>
+            </nav>
+
+            <!-- Right Profile & Utilities -->
+            <div class="flex items-center space-x-4">
+                <div class="relative cursor-pointer text-gray-400 hover:text-gray-700 transition">
+                    <i data-lucide="bell" class="w-5 h-5"></i>
+                    <span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-materio rounded-full ring-2 ring-[#F4F5FA]"></span>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Admin&background=0F172A&color=fff" alt="Profile" class="w-9 h-9 rounded-full shadow-sm cursor-pointer border-2 border-white">
+            </div>
+        </header>
+
+        <!-- Main Content Area with Side Icons -->
+        <div class="flex flex-1 relative">
+            
+            <!-- Left Floating Sidebar Icons -->
+            <aside class="w-12 flex flex-col items-center space-y-3 sticky top-32 h-fit z-10 hidden md:flex">
+                <a href="#" id="btn-calendar" class="w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:shadow transition">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                </a>
+                <a href="#" id="btn-chart" class="w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:shadow transition">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                </a>
+                <a href="#" id="btn-truck" class="w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:shadow transition">
+                    <i data-lucide="truck" class="w-5 h-5"></i>
+                </a>
+                <a href="#" id="btn-users" class="w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:shadow transition">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                </a>
+                <a href="#" id="btn-alert" class="w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:shadow transition">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </a>
+            </aside>
+
+            <!-- Main Dashboard Body -->
+            <main class="flex-1 w-full md:pl-28">
+                
+                <h1 class="text-[40px] font-bold text-gray-900 mb-8 tracking-tight">Dashboard Overview</h1>
+
+                <!-- Top Layout Grid (Image specific structure) -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8 mb-8">
+                    
+                    <!-- Left Section: Location & Materials -->
+                    <div class="md:col-span-5 flex flex-col space-y-5">
+                        
+                        <!-- Location Pill -->
+                        <div class="bg-white px-5 py-3.5 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 flex items-center justify-between w-full cursor-pointer hover:shadow-md transition">
+                            <div class="flex items-center text-gray-600 text-[15px]">
+                                <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-gray-400"></i> Prime Stone Tower, 125 Main St TX
+                            </div>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        
+                        <!-- Materials In Stock Card -->
+                        <div class="bg-white rounded-2xl p-8 shadow-[0_2px_15px_rgba(0,0,0,0.03)] border border-gray-50 flex-1 relative flex flex-col">
+                            <div class="absolute top-6 right-6 bg-gray-50 p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition">
+                                <i data-lucide="arrow-up-right" class="w-4 h-4 text-gray-400"></i>
+                            </div>
+                            
+                            <h3 class="text-gray-800 text-lg font-medium mb-4">Materials in Stock</h3>
+                            
+                            <div class="text-[56px] font-bold text-gray-900 mb-6 leading-none tracking-tight" id="stock-health-text">--%</div>
+                            
+                            <!-- Progress bar exactly like image: thick, colored, gray background trace -->
+                            <div class="w-full bg-gray-200 rounded-full h-2 mb-8 relative">
+                                <div id="materials-progress" class="bg-materio h-2 rounded-full absolute left-0 top-0 transition-all duration-1000" style="width: 0%;"></div>
+                            </div>
+
+                            <div class="flex items-center space-x-2 text-sm text-gray-400 mt-auto">
+                                <i data-lucide="activity" class="w-4 h-4"></i>
+                                <span>Based on automated system stock thresholds.</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Section: Alerts Feed replacing the 3D grid -->
+                    <!-- We give it the large airy feel using a soft white background and larger paddings -->
+                    <div class="md:col-span-7 bg-white rounded-2xl border border-gray-50 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.03)] flex flex-col h-full min-h-[320px]">
+                        <div class="p-8 border-b border-gray-50 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-900 tracking-tight">Recent Activity & Alerts</h2>
+                                <p class="text-gray-400 text-sm mt-1">Live updates from your inventory pipeline.</p>
+                            </div>
+                            <a href="/alerts" class="text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg text-sm font-medium hover:text-gray-800 transition">View All</a>
+                        </div>
+                        <div class="p-8 overflow-y-auto flex-1">
+                            <ul id="recent-alerts-list" class="space-y-5">
+                                <!-- Populated by JS -->
+                                <li class="text-center text-gray-400 py-10">Loading network alerts...</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Bottom Cards Grid (Matching the 3 cards at the bottom of the image) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    
+                    <!-- Card 1: Total Revenue -->
+                    <div class="bg-white rounded-2xl p-7 shadow-[0_2px_15px_rgba(0,0,0,0.03)] border border-gray-50 flex flex-col relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-6 z-10">
+                            <h3 class="text-gray-800 font-medium">Total Revenue</h3>
+                            <div class="text-xs bg-gray-50 text-gray-500 px-3 py-1.5 rounded-lg cursor-pointer flex items-center hover:bg-gray-100 transition">
+                                All Time <i data-lucide="chevron-down" class="w-3 h-3 ml-1.5"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline space-x-3 mt-4 z-10">
+                            <div id="revenue-overview" class="text-[40px] font-bold text-gray-900 tracking-tight leading-none">--</div>
+                        </div>
+                        <!-- Decorative glow -->
+                        <div class="absolute bottom-[-10px] left-10 p-10 bg-green-100 opacity-30 rounded-full blur-2xl z-0"></div>
+                    </div>
+                    
+                    <!-- Card 2: Top Stock Levels -->
+                    <div class="bg-white rounded-2xl p-7 shadow-[0_2px_15px_rgba(0,0,0,0.03)] border border-gray-50 relative flex flex-col">
+                        <div class="absolute top-6 right-6 bg-gray-50 p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition z-10">
+                            <i data-lucide="arrow-up-right" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        <h3 class="text-gray-800 font-medium mb-1">Top Stock Levels</h3>
+                        <div class="text-xs text-gray-400 mb-6">Quantity by top item</div>
+                        
+                        <div class="h-32 w-full mt-auto relative z-10">
+                            <canvas id="stockChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Revenue by Product -->
+                    <div class="bg-white rounded-2xl p-7 shadow-[0_2px_15px_rgba(0,0,0,0.03)] border border-gray-50 flex flex-col relative">
+                        <h3 class="text-gray-800 font-medium mb-1">Revenue by Product</h3>
+                        <div class="text-xs text-gray-400 mb-6 w-3/4">Breakdown percentage per item. Hover for details.</div>
+                        
+                        <div class="h-32 w-full mt-auto flex justify-center relative z-10">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+            </main>
+        </div>
+    <!-- MODALS -->
+    <!-- Overlay -->
+    <div id="modal-overlay" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-40 hidden transition-opacity"></div>
+    
+    <!-- Suppliers Modal -->
+    <div id="suppliers-modal" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white w-full max-w-lg rounded-2xl shadow-2xl z-50 hidden opacity-0 transition-all duration-300 scale-95 flex flex-col max-h-[80vh]">
+        <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center"><i data-lucide="truck" class="w-5 h-5 mr-3 text-gray-400"></i> Active Suppliers</h2>
+            <button onclick="closeModals()" class="text-gray-400 hover:text-gray-800"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto w-full flex-1">
+            <ul id="suppliers-list" class="space-y-3">
+                <li class="text-center text-sm text-gray-400 py-4">Loading suppliers...</li>
+            </ul>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-50 bg-gray-50 rounded-b-2xl text-right">
+            <button onclick="closeModals()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-5 py-2 rounded-lg font-medium text-sm transition">Close</button>
+        </div>
+    </div>
+
+    <!-- Customers Modal -->
+    <div id="customers-modal" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white w-full max-w-lg rounded-2xl shadow-2xl z-50 hidden opacity-0 transition-all duration-300 scale-95 flex flex-col max-h-[80vh]">
+        <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center"><i data-lucide="users" class="w-5 h-5 mr-3 text-gray-400"></i> Contact Book</h2>
+            <button onclick="closeModals()" class="text-gray-400 hover:text-gray-800"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto w-full flex-1">
+            <ul id="customers-list" class="space-y-3">
+                <li class="text-center text-sm text-gray-400 py-4">Loading customers...</li>
+            </ul>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-50 bg-gray-50 rounded-b-2xl text-right">
+            <button onclick="closeModals()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-5 py-2 rounded-lg font-medium text-sm transition">Close</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notify" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg font-medium text-sm flex items-center hidden translate-y-10 transition-all duration-300 z-50">
+        <i data-lucide="check-circle-2" class="w-4 h-4 mr-2 text-green-400"></i> <span id="toast-text">Action completed</span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/dashboard.js"></script>
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
+
+        // Modal Global Helpers
+        function closeModals() {
+            const overlay = document.getElementById('modal-overlay');
+            const supModal = document.getElementById('suppliers-modal');
+            const cusModal = document.getElementById('customers-modal');
+            
+            supModal.classList.remove('opacity-100', 'scale-100');
+            cusModal.classList.remove('opacity-100', 'scale-100');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                supModal.classList.add('hidden');
+                cusModal.classList.add('hidden');
+            }, 200);
+        }
+        
+        document.getElementById('modal-overlay').addEventListener('click', closeModals);
+    </script>
+</body>
+</html>
