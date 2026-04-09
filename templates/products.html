@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -228,3 +229,151 @@
     </script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Products</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="/static/css/style.css" rel="stylesheet"/>
+</head>
+<body>
+
+  <nav class="navbar navbar-light bg-white px-4 py-3 shadow-sm border-bottom">
+    <span class="navbar-brand fw-bold fs-5 text-dark"><i class="bi bi-box-seam me-2 text-primary"></i>InventoryPro</span>
+    <div class="d-flex gap-3">
+      <a href="/" class="nav-link text-secondary">Dashboard</a>
+      <a href="/products" class="nav-link text-dark fw-semibold">Products</a>
+      <a href="/sales" class="nav-link text-secondary">Sales</a>
+      <a href="/alerts" class="nav-link text-secondary">Alerts</a>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4 py-4">
+    <h4 class="fw-bold mb-1">Products</h4>
+    <p class="text-muted mb-4">Manage your product inventory</p>
+
+    <!-- ADD PRODUCT FORM -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3"><span class="fw-semibold">Add New Product</span></div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Product Name</label>
+            <input type="text" id="p-name" class="form-control" placeholder="e.g. Wireless Keyboard"/>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Category</label>
+            <select id="p-category" class="form-select"><option>Loading...</option></select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Supplier</label>
+            <select id="p-supplier" class="form-select"><option>Loading...</option></select>
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Price (₹)</label>
+            <input type="number" id="p-price" class="form-control" placeholder="0"/>
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Stock Qty</label>
+            <input type="number" id="p-stock" class="form-control" placeholder="0"/>
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Reorder At</label>
+            <input type="number" id="p-reorder" class="form-control" placeholder="10"/>
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Unit</label>
+            <input type="text" id="p-unit" class="form-control" placeholder="pcs"/>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary px-4" onclick="addProduct()">
+              <i class="bi bi-plus-circle me-1"></i> Add Product
+            </button>
+            <span id="product-msg" class="ms-3 text-success fw-semibold"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS TABLE -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3"><span class="fw-semibold">All Products</span></div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Product</th><th>Category</th><th>Supplier</th>
+                <th>Price</th><th>Stock</th><th>Unit</th>
+                <th>Reorder Level</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="products-body">
+              <tr><td colspan="8" class="text-center py-4 text-muted">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadDropdowns() {
+      const [cats, sups] = await Promise.all([
+        fetch("/api/categories").then(r => r.json()),
+        fetch("/api/suppliers").then(r => r.json())
+      ]);
+      document.getElementById("p-category").innerHTML =
+        cats.map(c => `<option value="${c.category_id}">${c.name}</option>`).join("");
+      document.getElementById("p-supplier").innerHTML =
+        sups.map(s => `<option value="${s.supplier_id}">${s.name}</option>`).join("");
+    }
+
+    async function loadProducts() {
+      const res = await fetch("/api/products");
+      const data = await res.json();
+      document.getElementById("products-body").innerHTML = data.map(p => `
+        <tr>
+          <td class="fw-semibold">${p.product}</td>
+          <td>${p.category}</td>
+          <td>${p.supplier}</td>
+          <td>₹${p.price}</td>
+          <td>${p.stock_qty}</td>
+          <td>${p.unit}</td>
+          <td>${p.reorder_level}</td>
+          <td>${p.stock_qty < p.reorder_level
+            ? '<span class="badge bg-danger">Low Stock</span>'
+            : '<span class="badge bg-success">In Stock</span>'}</td>
+        </tr>`).join("");
+    }
+
+    async function addProduct() {
+      const payload = {
+        name:          document.getElementById("p-name").value,
+        category_id:   document.getElementById("p-category").value,
+        supplier_id:   document.getElementById("p-supplier").value,
+        price:         document.getElementById("p-price").value,
+        stock_qty:     document.getElementById("p-stock").value,
+        reorder_level: document.getElementById("p-reorder").value,
+        unit:          document.getElementById("p-unit").value
+      };
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      document.getElementById("product-msg").textContent = data.message;
+      loadProducts();
+      setTimeout(() => document.getElementById("product-msg").textContent = "", 3000);
+    }
+
+    loadDropdowns();
+    loadProducts();
+  </script>
+</body>
+</html>
+>>>>>>> e9850321be0d01f9bf24ae43ecd6dadbc2d1cb06

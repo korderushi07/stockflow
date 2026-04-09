@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -201,3 +202,114 @@
     </script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Alerts — InventoryPro</title>
+  <link href="/static/css/style.css" rel="stylesheet"/>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">📦</div>
+      <h2>InventoryPro</h2><p>Management System</p>
+    </div>
+    <span class="nav-section-title">Main Menu</span>
+    <a href="/"         class="nav-link"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a href="/products" class="nav-link"><span class="nav-icon">📦</span> Products</a>
+    <a href="/sales"    class="nav-link"><span class="nav-icon">🛒</span> Sales</a>
+    <a href="/alerts"   class="nav-link active"><span class="nav-icon">🚨</span> Alerts</a>
+    <div class="sidebar-footer">InventoryPro v1.0</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Stock Alerts</h1>
+      <p>Products below reorder level — contact supplier immediately</p>
+    </div>
+
+    <!-- VIEW INFO -->
+    <div class="info-box">
+      <span class="icon">👁️</span>
+      <span>Powered by SQL View <code>vw_low_stock</code> — automatically filters products below reorder level and joins supplier contact info so you know exactly who to call.</span>
+    </div>
+
+    <!-- LOW STOCK TABLE -->
+    <div class="card">
+      <div class="card-header"><div><h3>🚨 Low Stock Products</h3><p>Needs immediate restocking</p></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Product</th><th>Category</th><th>Supplier</th><th>Contact</th><th>Current Stock</th><th>Reorder Level</th><th>Shortage</th></tr>
+          </thead>
+          <tbody id="lowstock-body">
+            <tr><td colspan="7" style="text-align:center;padding:30px;color:#475569">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ALERTS LOG -->
+    <div class="card">
+      <div class="card-header"><div><h3>All Alerts Log</h3><p>Complete history of stock alerts</p></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Product</th><th>Message</th><th>Time</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody id="alerts-body">
+            <tr><td colspan="6" style="text-align:center;padding:30px;color:#475569">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function loadLowStock() {
+      const data = await fetch("/api/products").then(r => r.json());
+      const low = data.filter(p => p.stock_qty < p.reorder_level);
+      const tbody = document.getElementById("lowstock-body");
+      if (low.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#4ade80">✅ All products are sufficiently stocked!</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = low.map(p => `
+        <tr>
+          <td class="td-bold">${p.product}</td>
+          <td>${p.category}</td><td>${p.supplier}</td><td>${p.supplier_city}</td>
+          <td><span class="badge badge-danger">${p.stock_qty}</span></td>
+          <td>${p.reorder_level}</td>
+          <td><span class="badge badge-warning">-${p.reorder_level - p.stock_qty} units</span></td>
+        </tr>`).join("");
+    }
+
+    async function loadAlerts() {
+      const data = await fetch("/api/alerts").then(r => r.json());
+      document.getElementById("alerts-body").innerHTML = data.map(a => `
+        <tr>
+          <td><span class="badge badge-info">#${a.alert_id}</span></td>
+          <td class="td-bold">${a.product}</td>
+          <td style="font-size:12px;color:#64748b">${a.alert_message}</td>
+          <td style="font-size:12px">${a.alert_time}</td>
+          <td>${a.is_resolved
+            ? '<span class="badge badge-success">Resolved</span>'
+            : '<span class="badge badge-danger">Active</span>'}</td>
+          <td>${!a.is_resolved
+            ? `<button class="btn-resolve" onclick="resolveAlert(${a.alert_id})">✓ Resolve</button>`
+            : '<span style="color:#475569;font-size:12px">—</span>'}</td>
+        </tr>`).join("");
+    }
+
+    async function resolveAlert(id) {
+      await fetch(`/api/alerts/${id}/resolve`, { method: "POST" });
+      loadAlerts();
+    }
+
+    loadLowStock(); loadAlerts();
+  </script>
+</body>
+</html>
+>>>>>>> e9850321be0d01f9bf24ae43ecd6dadbc2d1cb06
